@@ -1,4 +1,4 @@
-$UserEmail = "haya@m-hd.co.il"  # Change this to the user you want to check
+$UserEmail = "input_user_email"  # Change this to the user you want to check
 
 # Get all mailboxes
 $Mailboxes = Get-Mailbox -ResultSize Unlimited
