@@ -96,7 +96,7 @@ Import-PSSession $Session
 
 # הענקת הרשאה גורפת ל Calendar עבור כל יומני העובדים
  
-$userRequiringAccess = "nofarr@reality-fund.com"
+$userRequiringAccess = "input_user"
 $accessRight = "editor"
  
 $mailboxes = Get-mailbox
@@ -132,7 +132,7 @@ Remove-PSSession $Session
 # הענקת הרשאה גורפת למשתמש ליומן בעברית של כל יומני העובדים - $CAL = "לוח שנה"
 
  
-$userRequiringAccess = "nofarr@reality-fund.com"
+$userRequiringAccess = "input_user"
 $accessRight = "editor"
  
 $mailboxes = Get-mailbox
