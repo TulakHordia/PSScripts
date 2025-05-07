@@ -1,5 +1,4 @@
-$SentinelSiteToken = "eyJ1cmwiOiAiaHR0cHM6Ly91c2VhMS1uZXNzYXQuc2VudGluZWxvbmUubmV0IiwgInNpdGVfa2V5IjogIjI3Yzc3NTAwNmFiYTA1NjYifQ==";
-
+$SentinelSiteToken = "input_token";
 $tempPath = "C:\temp\Tools";
 $SentinelPath = "$tempPath\S1.exe";
 
