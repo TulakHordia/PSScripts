@@ -10,8 +10,8 @@ if (-not (Test-Path -Path $folderPath)) {
     New-Item -Path $folderPath -ItemType Directory | Out-Null
 }
 
-# Search for Windows 10 computers in AD
-$windows10Computers = Get-ADComputer -Filter {OperatingSystem -like "*Windows 10*"} -Property Name,OperatingSystem,OperatingSystemVersion
+# Search for enabled Windows 10 computers in AD
+$windows10Computers = Get-ADComputer -Filter {OperatingSystem -like "*Windows 10*" -and Enabled -eq $true} -Property Name,OperatingSystem,OperatingSystemVersion,Enabled
 
 # Display the results
 $windows10Computers | Select-Object Name, OperatingSystem, OperatingSystemVersion | Format-Table -AutoSize
