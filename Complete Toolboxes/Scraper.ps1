@@ -14,7 +14,7 @@
 # Import Active Directory module
 Import-Module ActiveDirectory
 
-# Default threshold (can be changed by user later)
+# Versioning
 try {
     $scriptVersion = git describe --tags --abbrev=0 2>$null
     if ([string]::IsNullOrWhiteSpace($scriptVersion)) {
@@ -24,6 +24,7 @@ try {
     $scriptVersion = "v1.0.0"
 }
 
+# Global Variables
 $global:thresholdDays = 30
 $global:disabledDescription = "Disabled by Beni - 07/05/2025"
 $domainName = (Get-ADDomain).Name
@@ -31,15 +32,14 @@ $folderPath = "C:\Twistech\Script Results"
 $pcPath = "$folderPath\$domainName-InactiveComputers.csv"
 $usersPath = "$folderPath\$domainName-InactiveUsers.csv"
 
-
+# Create the folder if it doesn't exist
 function Create-ScriptResultsFolder {
-    # Create the folder if it doesn't exist
     if (-not (Test-Path -Path $folderPath)) {
         New-Item -Path $folderPath -ItemType Directory | Out-Null
 }
 }
 
-
+# Menu function
 function Show-Menu {
     Clear-Host
 
@@ -79,6 +79,32 @@ function Show-Menu {
     Write-Host ""
     Write-Host "=============================================" -ForegroundColor DarkCyan
 }
+
+
+# Main Program Loop
+do {
+    Show-Menu
+    $choice = Read-Host "Enter your choice (1-9, Q to quit)"
+
+    switch ($choice) {
+        "1" { Scrape-PCs }
+        "2" { Add-Description-To-PCs }
+        "3" { Disable-PCs }
+        "4" { Scrape-Users }
+        "5" { Add-Description-To-Users }
+        "6" { Disable-Users }
+        "7" { Set-Description }
+        "8" { Set-Threshold }
+        "9" { Scrape-Groups }
+        "Q" { Write-Host "Exiting..."; break }
+        default { Write-Host "Invalid choice, please select a valid option." -ForegroundColor Red }
+    }
+
+    if ($choice -ne "Q") {
+        Read-Host "Press Enter to continue..."
+    }
+}
+while ($choice -ne "Q")
 
 
 function Scrape-PCs {
@@ -224,29 +250,3 @@ function Scrape-Groups {
     $groupMembers | Export-Csv -Path $groupPath -NoTypeInformation
     Write-Host "Group members scraped and exported to: $groupPath" -ForegroundColor Green
 }
-
-
-# Main Program Loop
-do {
-    Show-Menu
-    $choice = Read-Host "Enter your choice (1-9, Q to quit)"
-
-    switch ($choice) {
-        "1" { Scrape-PCs }
-        "2" { Add-Description-To-PCs }
-        "3" { Disable-PCs }
-        "4" { Scrape-Users }
-        "5" { Add-Description-To-Users }
-        "6" { Disable-Users }
-        "7" { Set-Description }
-        "8" { Set-Threshold }
-        "9" { Scrape-Groups }
-        "Q" { Write-Host "Exiting..."; break }
-        default { Write-Host "Invalid choice, please select a valid option." -ForegroundColor Red }
-    }
-
-    if ($choice -ne "Q") {
-        Read-Host "Press Enter to continue..."
-    }
-}
-while ($choice -ne "Q")
