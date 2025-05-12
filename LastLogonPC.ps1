@@ -7,14 +7,14 @@ $30DaysAgo = (Get-Date).AddDays(-30)
 # Get the current domain name
 $domainName = (Get-ADDomain).Name
 
-# Get the current user's desktop path
-$desktopPath = "$env:USERPROFILE\Desktop"
+# Set the Twistech folder path
+$folderPath = "C:\Twistech\Script Results"
 
 # Create the file path for the CSV on the user's desktop
-$csvPath = "$desktopPath\$domainName-LastLogonPC.csv"
+$csvPath = "$folderPath\$domainName-LastLogonPC.csv"
 
-# Get all enabled computers in Active Directory
-$computers = Get-ADComputer -Filter {Enabled -eq $true} -Property LastLogonDate
+# Get all computers in Active Directory
+$computers = Get-ADComputer -Filter * -Property LastLogonDate
 
 # Create an array to store the results
 $results = @()
@@ -33,6 +33,11 @@ foreach ($computer in $computers) {
             LastLogonDate = $lastLogonDateOnly
         }
     }
+}
+
+# Create the folder if it doesn't exist
+if (-not (Test-Path -Path $folderPath)) {
+    New-Item -Path $folderPath -ItemType Directory | Out-Null
 }
 
 # Display the results or export them to a CSV file

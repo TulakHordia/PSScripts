@@ -2,7 +2,7 @@ Import-Module ExchangeOnlineManagement
 Connect-IPPSSession -UserPrincipalName ttadmin@TCSM.onmicrosoft.com
 
 # Define the user's mailbox
-$UserMailbox = "input_user"
+$UserMailbox = "tal.sitbon@techsomed.com"
 
 # Create a Compliance Search for all emails in the mailbox
 $Search = New-ComplianceSearch -Name "DeleteMailbox_$UserMailbox" `
