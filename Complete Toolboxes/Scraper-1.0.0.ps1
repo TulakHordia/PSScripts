@@ -2,24 +2,28 @@
 .SYNOPSIS
     Inactive AD Object Management Script
 .DESCRIPTION
-    This script helps you find, tag, and disable inactive PCs and users in AD.
+    This script helps you find, tag, and disable inactive PCs, users, and export group memberships.
 .VERSION
-    1.2.0
+    AUTO_VERSION
 .AUTHOR
     Benjamin Rain - Twistech
 .LAST UPDATED
-    2025-05-07
-.CHANGELOG
-    1.0.0 - Initial version
-    1.1.0 - Added CSV export and threshold logic
-    1.2.0 - Added group member scraping + menu polish
+    AUTO_DATE
 #>
 
 # Import Active Directory module
 Import-Module ActiveDirectory
 
 # Default threshold (can be changed by user later)
-$scriptVersion = "1.2.0"
+try {
+    $scriptVersion = git describe --tags --abbrev=0 2>$null
+    if ([string]::IsNullOrWhiteSpace($scriptVersion)) {
+        $scriptVersion = "v1.0.0"
+    }
+} catch {
+    $scriptVersion = "v1.0.0"
+}
+
 $global:thresholdDays = 30
 $global:disabledDescription = "Disabled by Beni - 07/05/2025"
 $domainName = (Get-ADDomain).Name
@@ -69,7 +73,7 @@ function Show-Menu {
     Write-Host "  ------ Groups ------"
     Write-Host "  [9] Scrape AD Groups and Members"
 	Write-Host ""
-    Write-Host "  [0] Exit"
+    Write-Host "  [Q] Exit"
 
     # Bottom divider
     Write-Host ""
@@ -225,7 +229,7 @@ function Scrape-Groups {
 # Main Program Loop
 do {
     Show-Menu
-    $choice = Read-Host "Enter your choice (1-8)"
+    $choice = Read-Host "Enter your choice (1-9, Q to quit)"
 
     switch ($choice) {
         "1" { Scrape-PCs }
@@ -237,12 +241,12 @@ do {
         "7" { Set-Description }
         "8" { Set-Threshold }
         "9" { Scrape-Groups }
-        "0" { Write-Host "Exiting..."; break }
+        "Q" { Write-Host "Exiting..."; break }
         default { Write-Host "Invalid choice, please select a valid option." -ForegroundColor Red }
     }
 
-    if ($choice -ne "0") {
+    if ($choice -ne "Q") {
         Read-Host "Press Enter to continue..."
     }
 }
-while ($choice -ne "0")
+while ($choice -ne "Q")
