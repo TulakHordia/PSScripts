@@ -2,7 +2,7 @@ Connect-MsolService -Credential $UserCredential
 Connect-ExchangeOnline -Credential $UserCredential
 
 $users = Get-MsolUser -All | Where-Object { $_.isLicensed -eq $true }
-$domain = "picardia.net"
+$domain = "input_domain_here"
 
 foreach ($user in $users) {
     $primarySMTP = $user.UserPrincipalName

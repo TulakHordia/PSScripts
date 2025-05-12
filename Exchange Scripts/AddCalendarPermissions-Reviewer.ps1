@@ -37,8 +37,8 @@ while ($grantPermissions) {
     $WarningActionPreference = "SilentlyContinue"
     
     # Try to add permissions to the calendar
-    Add-MailboxFolderPermission -Identity "$($calendarOwner):\Calendar" -User $recipient -AccessRights Editor
-    Add-MailboxFolderPermission -Identity "$($calendarOwner):\לוח שנה" -User $recipient -AccessRights Editor
+    Add-MailboxFolderPermission -Identity "$($calendarOwner):\Calendar" -User $recipient -AccessRights Reviewer
+    Add-MailboxFolderPermission -Identity "$($calendarOwner):\לוח שנה" -User $recipient -AccessRights Reviewer
 
     # Reset warning preference
     $WarningActionPreference = "Continue"
