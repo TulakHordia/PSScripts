@@ -8,46 +8,6 @@ Import-Module ExchangeOnlineManagement -Force
 $domainName = (Get-ADDomain).Name
 $folderPath = "C:\Twistech\Script Results"
 $csvPath = "$folderPath\$domainName-Exchange.csv"
-
-function Show-Menu {
-    Clear-Host
-    Write-Host "===================================" -ForegroundColor DarkCyan
-    Write-Host "         Exchange Toolbox           " -ForegroundColor Green
-    Write-Host "===================================" -ForegroundColor DarkCyan
-    Write-Host "1. Connect to Exchange Online"
-    Write-Host " ------ Calendar ------"
-    Write-Host "2. Check Calendar Permissions for a User"
-    Write-Host "3. Give Calendar Permission - EDITOR"
-    Write-Host "4. Give Calendar Permission - REVIEWER"
-    Write-Host "5. Remove Calendar Permissions"
-    Write-Host " ------ Mailbox ------"
-    Write-Host "6. Export Mailbox Size"
-    Write-Host " ------ Change Exchange Variables ------"
-    Write-Host "7. Add an alias to all mailboxes"
-    Write-Host "Q. Quit"
-    Write-Host ""
-}
-
-do {
-    Show-Menu
-    $choice = Read-Host "Select an option"
-    switch ($choice) {
-        '1' { Connect-ExchangeOnlineSession }
-        '2' { Check-CalendarPermissions }
-        '3' { Give-EditorPermission }
-        '4' { Give-ReviewerPermission }
-        '5' { Remove-CalendarPermissions }
-        '6' { Export-MailboxSize}
-        '7' { Add-AliasToAllMailboxes}
-        'Q' { Write-Host "Exiting script." -ForegroundColor Cyan }
-        default { Write-Host "Invalid selection. Please try again." -ForegroundColor Red }
-    }
-    if ($choice -ne 'Q') {
-        Write-Host "`nPress Enter to return to the menu..."
-        [void][System.Console]::ReadLine()
-    }
-} while ($choice -ne 'Q')
-
 function Connect-ExchangeOnlineSession {
     try {
         Write-Host "Connecting to Exchange Online..." -ForegroundColor Cyan
@@ -58,7 +18,7 @@ function Connect-ExchangeOnlineSession {
     }
 }
 
-function Give-EditorPermission {
+function Grant-EditorPermission {
     $calendarOwner = Read-Host "Enter the email address of the calendar owner"
     $grantPermissions = $true
 
@@ -68,8 +28,6 @@ function Give-EditorPermission {
         Add-MailboxFolderPermission -Identity "$($calendarOwner):\Calendar" -User $recipient -AccessRights Editor
         Add-MailboxFolderPermission -Identity "$($calendarOwner):\לוח שנה" -User $recipient -AccessRights Editor
 
-        $WarningActionPreference = "Continue"
-
         $response = Read-Host "Do you want to grant permissions to another user? (Y/N)"
         if ($response -ne "Y") {
             $grantPermissions = $false
@@ -77,7 +35,7 @@ function Give-EditorPermission {
     }
 }
 
-function Give-ReviewerPermission {
+function Grant-ReviewerPermission {
     $calendarOwner = Read-Host "Enter the email address of the calendar owner"
     $grantPermissions = $true
 
@@ -87,8 +45,6 @@ function Give-ReviewerPermission {
         Add-MailboxFolderPermission -Identity "$($calendarOwner):\Calendar" -User $recipient -AccessRights Reviewer
         Add-MailboxFolderPermission -Identity "$($calendarOwner):\לוח שנה" -User $recipient -AccessRights Reviewer
 
-        $WarningActionPreference = "Continue"
-
         $response = Read-Host "Do you want to grant permissions to another user? (Y/N)"
         if ($response -ne "Y") {
             $grantPermissions = $false
@@ -96,7 +52,7 @@ function Give-ReviewerPermission {
     }
 }
 
-function Check-CalendarPermissions {
+function Get-CalendarPermissions {
     $UserEmail = Read-Host "Enter the email address to check calendar permissions for"
     
     # Get all mailboxes
@@ -137,9 +93,7 @@ function Remove-CalendarPermissions {
         $userToRemove = Read-Host "Enter the email address of the user whose permissions you want to revoke"
 
         Remove-MailboxFolderPermission -Identity "$($calendarOwner):\Calendar" -User $userToRemove
-        Remove-MailboxFolderPermission-MailboxFolderPermission -Identity "$($calendarOwner):\לוח שנה" -User $userToRemove
-
-        $WarningActionPreference = "Continue"
+        Remove-MailboxFolderPermission -Identity "$($calendarOwner):\לוח שנה" -User $userToRemove
 
         $response = Read-Host "Do you want to revoke permissions from another user? (Y/N)"
         if ($response -ne "Y") {
@@ -148,26 +102,26 @@ function Remove-CalendarPermissions {
     }
 }
 
+
 function Export-MailboxSize {
-$Mailboxes = Get-Mailbox -ResultSize Unlimited
+    $Mailboxes = Get-Mailbox -ResultSize Unlimited
 
-$MailboxData = $Mailboxes | ForEach-Object {
-    $Stats = Get-MailboxStatistics $_.PrimarySmtpAddress
-    $ArchiveStats = Get-MailboxStatistics $_.PrimarySmtpAddress -Archive
-    [PSCustomObject]@{
-        DisplayName      = $_.DisplayName
-        PrimarySMTP      = $_.PrimarySmtpAddress
-        MailboxType      = $_.RecipientTypeDetails
-        TotalItemSize    = $Stats.TotalItemSize.ToString()
-        ItemCount        = $Stats.ItemCount
-        ArchiveEnabled   = if ($_.ArchiveStatus -eq "Active") {"Yes"} else {"No"}
-        ArchiveSize      = if ($ArchiveStats) { $ArchiveStats.TotalItemSize.ToString() } else {"N/A"}
+    $MailboxData = $Mailboxes | ForEach-Object {
+        $Stats = Get-MailboxStatistics $_.PrimarySmtpAddress
+        $ArchiveStats = Get-MailboxStatistics $_.PrimarySmtpAddress -Archive
+        [PSCustomObject]@{
+            DisplayName      = $_.DisplayName
+            PrimarySMTP      = $_.PrimarySmtpAddress
+            MailboxType      = $_.RecipientTypeDetails
+            TotalItemSize    = $Stats.TotalItemSize.ToString()
+            ItemCount        = $Stats.ItemCount
+            ArchiveEnabled   = if ($_.ArchiveStatus -eq "Active") {"Yes"} else {"No"}
+            ArchiveSize      = if ($ArchiveStats) { $ArchiveStats.TotalItemSize.ToString() } else {"N/A"}
+        }
     }
+    $MailboxData | Export-Csv -Path "$folderPath\$domainName-MailboxReport.csv" -NoTypeInformation
 }
 
-$MailboxData | Export-Csv -Path "$folderPath\$domainName-MailboxReport.csv" -NoTypeInformation
-
-}
 
 function Add-AliasToAllMailboxes {
     Connect-MsolService
@@ -210,3 +164,43 @@ function Add-AliasToAllMailboxes {
 
     Read-Host -Prompt "`nPress Enter to return to the menu..."
 }
+
+
+function Show-Menu {
+    Clear-Host
+    Write-Host "===================================" -ForegroundColor DarkCyan
+    Write-Host "         Exchange Toolbox          " -ForegroundColor Green
+    Write-Host "===================================" -ForegroundColor DarkCyan
+    Write-Host "1. Connect to Exchange Online"
+    Write-Host " ------ Calendar ------"
+    Write-Host "2. Check Calendar Permissions for a User"
+    Write-Host "3. Give Calendar Permission - EDITOR"
+    Write-Host "4. Give Calendar Permission - REVIEWER"
+    Write-Host "5. Remove Calendar Permissions"
+    Write-Host " ------ Mailbox ------"
+    Write-Host "6. Export Mailbox Size"
+    Write-Host " ------ Change Exchange Variables ------"
+    Write-Host "7. Add an alias to all mailboxes"
+    Write-Host "Q. Quit"
+    Write-Host ""
+}
+
+do {
+    Show-Menu
+    $choice = Read-Host "Select an option"
+    switch ($choice) {
+        '1' { Connect-ExchangeOnlineSession }
+        '2' { Get-CalendarPermissions }
+        '3' { Grant-EditorPermission }
+        '4' { Grant-ReviewerPermission }
+        '5' { Remove-CalendarPermissions }
+        '6' { Export-MailboxSize}
+        '7' { Add-AliasToAllMailboxes}
+        'Q' { Write-Host "Exiting script." -ForegroundColor Cyan }
+        default { Write-Host "Invalid selection. Please try again." -ForegroundColor Red }
+    }
+    if ($choice -ne 'Q') {
+        Write-Host "Press Enter to return to the menu."
+        [void][System.Console]::ReadLine()
+    }
+} while ($choice -ne 'Q')

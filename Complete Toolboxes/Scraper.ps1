@@ -15,14 +15,7 @@
 Import-Module ActiveDirectory
 
 # Versioning
-try {
-    $scriptVersion = git describe --tags --abbrev=0 2>$null
-    if ([string]::IsNullOrWhiteSpace($scriptVersion)) {
-        $scriptVersion = "v1.0.0"
-    }
-} catch {
-    $scriptVersion = "v1.0.0"
-}
+$scriptVersion = "v1.0.1"
 
 # Global Variables
 $global:thresholdDays = 30
@@ -39,72 +32,126 @@ function Create-ScriptResultsFolder {
 }
 }
 
-# Menu function
-function Show-Menu {
-    Clear-Host
+# New top-level menu function with nested submenus
+# Load necessary assemblies
+Add-Type -AssemblyName System.Windows.Forms
+Add-Type -AssemblyName System.Drawing
 
-    # Top banner
-    Write-Host "=============================================" -ForegroundColor DarkCyan
-    Write-Host "      Inactive Computer and User Scraper" -ForegroundColor Green
-    Write-Host "=============================================" -ForegroundColor DarkCyan
-    Write-Host ""
+# Import AD Module
+Import-Module ActiveDirectory
 
-    # Domain Info
-    Write-Host ("Domain            : {0}" -f $domainName) -ForegroundColor Yellow
-    Write-Host ("Current Threshold : {0} days" -f $thresholdDays) -ForegroundColor Cyan
-    Write-Host ("Current Description     : {0}" -f $disabledDescription) -ForegroundColor Magenta
-    Write-Host ("Script Version     : {0}" -f $scriptVersion) -ForegroundColor DarkGray
+# Version and Global Variables
+$scriptVersion = "v1.0.1"
+$global:thresholdDays = 30
+$global:disabledDescription = "Disabled by Beni - 07/05/2025"
+$domainName = (Get-ADDomain).Name
+$folderPath = "C:\Twistech\Script Results"
+$pcPath = "$folderPath\$domainName-InactiveComputers.csv"
+$usersPath = "$folderPath\$domainName-InactiveUsers.csv"
 
-    Write-Host ""
-
-    # Menu Options
-    Write-Host "Available Actions:" -ForegroundColor White
-	Write-Host "  ------ PC ------"
-    Write-Host "  [1] Scrape Inactive PCs (find inactive computer accounts)"
-    Write-Host "  [2] Add description to scraped PCs"
-    Write-Host "  [3] Disable scraped PCs"
-	Write-Host "  ------ Users ------"
-    Write-Host "  [4] Scrape inactive user accounts (find inactive user accounts)"
-    Write-Host "  [5] Add description to scraped users"
-    Write-Host "  [6] Disable scraped users"
-	Write-Host "  ------ Change Variables ------"
-    Write-Host "  [7] Change current Description"
-    Write-Host "  [8] Change threshold days"
-    Write-Host "  ------ Groups ------"
-    Write-Host "  [9] Scrape AD Groups and Members"
-	Write-Host ""
-    Write-Host "  [Q] Exit"
-
-    # Bottom divider
-    Write-Host ""
-    Write-Host "=============================================" -ForegroundColor DarkCyan
-}
-
-
-# Main Program Loop
-do {
-    Show-Menu
-    $choice = Read-Host "Enter your choice (1-9, Q to quit)"
-
-    switch ($choice) {
-        "1" { Scrape-PCs }
-        "2" { Add-Description-To-PCs }
-        "3" { Disable-PCs }
-        "4" { Scrape-Users }
-        "5" { Add-Description-To-Users }
-        "6" { Disable-Users }
-        "7" { Set-Description }
-        "8" { Set-Threshold }
-        "9" { Scrape-Groups }
-        "Q" { Write-Host "Exiting..."; break }
-        default { Write-Host "Invalid choice, please select a valid option." -ForegroundColor Red }
-    }
-
-    if ($choice -ne "Q") {
-        Read-Host "Press Enter to continue..."
+function Create-ScriptResultsFolder {
+    if (-not (Test-Path -Path $folderPath)) {
+        New-Item -Path $folderPath -ItemType Directory | Out-Null
     }
 }
-while ($choice -ne "Q")
+
+# AD Functions (from your existing logic)
+function Scrape-PCs { ... }
+function Add-Description-To-PCs { ... }
+function Disable-PCs { ... }
+function Scrape-Users { ... }
+function Add-Description-To-Users { ... }
+function Disable-Users { ... }
+function Set-Description { ... }
+function Set-Threshold { ... }
+function Scrape-Groups { ... }
+
+# Create Main Form
+$form = New-Object System.Windows.Forms.Form
+$form.Text = "Inactive AD Object Management"
+$form.Size = New-Object System.Drawing.Size(450, 500)
+$form.StartPosition = "CenterScreen"
+
+# Title Label
+$title = New-Object System.Windows.Forms.Label
+$title.Text = "Inactive AD Object Manager ($scriptVersion)"
+$title.Font = New-Object System.Drawing.Font("Segoe UI", 12, [System.Drawing.FontStyle]::Bold)
+$title.Size = New-Object System.Drawing.Size(400, 30)
+$title.Location = New-Object System.Drawing.Point(20, 20)
+$form.Controls.Add($title)
+
+# PC Actions
+$btnPC1 = New-Object System.Windows.Forms.Button
+$btnPC1.Text = "1. Scrape Inactive PCs"
+$btnPC1.Size = New-Object System.Drawing.Size(380, 30)
+$btnPC1.Location = New-Object System.Drawing.Point(30, 70)
+$btnPC1.Add_Click({ Scrape-PCs })
+$form.Controls.Add($btnPC1)
+
+$btnPC2 = New-Object System.Windows.Forms.Button
+$btnPC2.Text = "2. Add Description to PCs"
+$btnPC2.Size = New-Object System.Drawing.Size(380, 30)
+$btnPC2.Location = New-Object System.Drawing.Point(30, 110)
+$btnPC2.Add_Click({ Add-Description-To-PCs })
+$form.Controls.Add($btnPC2)
+
+$btnPC3 = New-Object System.Windows.Forms.Button
+$btnPC3.Text = "3. Disable Scraped PCs"
+$btnPC3.Size = New-Object System.Drawing.Size(380, 30)
+$btnPC3.Location = New-Object System.Drawing.Point(30, 150)
+$btnPC3.Add_Click({ Disable-PCs })
+$form.Controls.Add($btnPC3)
+
+# User Actions
+$btnUser1 = New-Object System.Windows.Forms.Button
+$btnUser1.Text = "4. Scrape Inactive Users"
+$btnUser1.Size = New-Object System.Drawing.Size(380, 30)
+$btnUser1.Location = New-Object System.Drawing.Point(30, 200)
+$btnUser1.Add_Click({ Scrape-Users })
+$form.Controls.Add($btnUser1)
+
+$btnUser2 = New-Object System.Windows.Forms.Button
+$btnUser2.Text = "5. Add Description to Users"
+$btnUser2.Size = New-Object System.Drawing.Size(380, 30)
+$btnUser2.Location = New-Object System.Drawing.Point(30, 240)
+$btnUser2.Add_Click({ Add-Description-To-Users })
+$form.Controls.Add($btnUser2)
+
+$btnUser3 = New-Object System.Windows.Forms.Button
+$btnUser3.Text = "6. Disable Scraped Users"
+$btnUser3.Size = New-Object System.Drawing.Size(380, 30)
+$btnUser3.Location = New-Object System.Drawing.Point(30, 280)
+$btnUser3.Add_Click({ Disable-Users })
+$form.Controls.Add($btnUser3)
+
+# Variable Settings
+$btnVar1 = New-Object System.Windows.Forms.Button
+$btnVar1.Text = "7. Set Disabled Description"
+$btnVar1.Size = New-Object System.Drawing.Size(380, 30)
+$btnVar1.Location = New-Object System.Drawing.Point(30, 330)
+$btnVar1.Add_Click({ Set-Description })
+$form.Controls.Add($btnVar1)
+
+$btnVar2 = New-Object System.Windows.Forms.Button
+$btnVar2.Text = "8. Set Inactivity Threshold"
+$btnVar2.Size = New-Object System.Drawing.Size(380, 30)
+$btnVar2.Location = New-Object System.Drawing.Point(30, 370)
+$btnVar2.Add_Click({ Set-Threshold })
+$form.Controls.Add($btnVar2)
+
+# Group Actions
+$btnGroup = New-Object System.Windows.Forms.Button
+$btnGroup.Text = "9. Scrape Groups"
+$btnGroup.Size = New-Object System.Drawing.Size(380, 30)
+$btnGroup.Location = New-Object System.Drawing.Point(30, 410)
+$btnGroup.Add_Click({ Scrape-Groups })
+$form.Controls.Add($btnGroup)
+
+# Show the Form
+$form.Topmost = $true
+$form.Add_Shown({ $form.Activate() })
+[void]$form.ShowDialog()
+
 
 
 function Scrape-PCs {
