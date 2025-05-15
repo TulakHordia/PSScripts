@@ -11,60 +11,35 @@
     AUTO_DATE
 #>
 
-# Import Active Directory module
-Import-Module ActiveDirectory
-
 # Versioning
 $scriptVersion = "v1.0.1"
-
-# Global Variables
-$global:thresholdDays = 30
-$global:disabledDescription = "Disabled by Beni - 07/05/2025"
-$domainName = (Get-ADDomain).Name
-$folderPath = "C:\Twistech\Script Results"
-$pcPath = "$folderPath\$domainName-InactiveComputers.csv"
-$usersPath = "$folderPath\$domainName-InactiveUsers.csv"
-
-# Create the folder if it doesn't exist
-function Create-ScriptResultsFolder {
-    if (-not (Test-Path -Path $folderPath)) {
-        New-Item -Path $folderPath -ItemType Directory | Out-Null
-}
-}
 
 # New top-level menu function with nested submenus
 # Load necessary assemblies
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
+# Install ImportExcel module if not already installed
+Install-Module -Name ImportExcel -Force -Scope CurrentUser
+
 # Import AD Module
 Import-Module ActiveDirectory
 
-# Version and Global Variables
-$scriptVersion = "v1.0.1"
+# Global Variables
 $global:thresholdDays = 30
 $global:disabledDescription = "Disabled by Beni - 07/05/2025"
 $domainName = (Get-ADDomain).Name
 $folderPath = "C:\Twistech\Script Results"
-$pcPath = "$folderPath\$domainName-InactiveComputers.csv"
-$usersPath = "$folderPath\$domainName-InactiveUsers.csv"
+$pcPath = "$folderPath\$domainName-InactiveComputers.xlsx"
+$usersPath = "$folderPath\$domainName-InactiveUsers.xlsx"
+$groupPath = "$folderPath\$domainName-GroupMembers.xlsx"
 
-function Create-ScriptResultsFolder {
+# Create the folder if it doesn't exist
+function New-ScriptResultsFolder {
     if (-not (Test-Path -Path $folderPath)) {
         New-Item -Path $folderPath -ItemType Directory | Out-Null
-    }
 }
-
-# AD Functions (from your existing logic)
-function Scrape-PCs { ... }
-function Add-Description-To-PCs { ... }
-function Disable-PCs { ... }
-function Scrape-Users { ... }
-function Add-Description-To-Users { ... }
-function Disable-Users { ... }
-function Set-Description { ... }
-function Set-Threshold { ... }
-function Scrape-Groups { ... }
+}
 
 # Create Main Form
 $form = New-Object System.Windows.Forms.Form
@@ -85,7 +60,7 @@ $btnPC1 = New-Object System.Windows.Forms.Button
 $btnPC1.Text = "1. Scrape Inactive PCs"
 $btnPC1.Size = New-Object System.Drawing.Size(380, 30)
 $btnPC1.Location = New-Object System.Drawing.Point(30, 70)
-$btnPC1.Add_Click({ Scrape-PCs })
+$btnPC1.Add_Click({ Get-InactivePCs })
 $form.Controls.Add($btnPC1)
 
 $btnPC2 = New-Object System.Windows.Forms.Button
@@ -107,7 +82,7 @@ $btnUser1 = New-Object System.Windows.Forms.Button
 $btnUser1.Text = "4. Scrape Inactive Users"
 $btnUser1.Size = New-Object System.Drawing.Size(380, 30)
 $btnUser1.Location = New-Object System.Drawing.Point(30, 200)
-$btnUser1.Add_Click({ Scrape-Users })
+$btnUser1.Add_Click({ Get-InactiveUsers })
 $form.Controls.Add($btnUser1)
 
 $btnUser2 = New-Object System.Windows.Forms.Button
@@ -144,7 +119,7 @@ $btnGroup = New-Object System.Windows.Forms.Button
 $btnGroup.Text = "9. Scrape Groups"
 $btnGroup.Size = New-Object System.Drawing.Size(380, 30)
 $btnGroup.Location = New-Object System.Drawing.Point(30, 410)
-$btnGroup.Add_Click({ Scrape-Groups })
+$btnGroup.Add_Click({ Get-GroupMembers })
 $form.Controls.Add($btnGroup)
 
 # Show the Form
@@ -153,8 +128,7 @@ $form.Add_Shown({ $form.Activate() })
 [void]$form.ShowDialog()
 
 
-
-function Scrape-PCs {
+function Get-InactivePCs {
     $global:resultsPCs = @()
     $dateThreshold = (Get-Date).AddDays(-$thresholdDays)
     
@@ -168,7 +142,7 @@ function Scrape-PCs {
 
     if ($resultsPCs.Count -gt 0) {
         Write-Host "$($resultsPCs.Count) inactive computers found."
-        Create-ScriptResultsFolder
+        New-ScriptResultsFolder
         $resultsPCs | Export-Csv -Path $pcPath -NoTypeInformation
         Write-Host "Results exported to: $pcPath"
     } else {
@@ -202,7 +176,7 @@ function Disable-PCs {
     Write-Host "Finished disabling computers."
 }
 
-function Scrape-Users {
+function Get-InactiveUsers {
     $global:resultsUsers = @()
     $dateThreshold = (Get-Date).AddDays(-$thresholdDays)
 
@@ -266,7 +240,7 @@ function Set-Threshold {
     }
 }
 
-function Scrape-Groups {
+function Get-GroupMembers {
     $groups = Get-ADGroup -Filter * | Sort-Object Name
     $groupMembers = @()
 
@@ -274,11 +248,13 @@ function Scrape-Groups {
         try {
             $members = Get-ADGroupMember -Identity $group.DistinguishedName -ErrorAction Stop
             foreach ($member in $members) {
-                $groupMembers += [pscustomobject]@{
-                    GroupName   = $group.Name
-                    MemberName  = $member.Name
-                    MemberType  = $member.objectClass
-                    MemberDN    = $member.DistinguishedName
+                if ($member.objectClass -eq 'user') {
+                    $groupMembers += [pscustomobject]@{
+                        GroupName   = $group.Name
+                        MemberName  = $member.Name
+                        MemberType  = $member.objectClass
+                        MemberDN    = $member.DistinguishedName
+                    }
                 }
             }
         } catch {
@@ -295,5 +271,5 @@ function Scrape-Groups {
     Create-ScriptResultsFolder
     $groupPath = "$folderPath\$domainName-GroupMembers.csv"
     $groupMembers | Export-Csv -Path $groupPath -NoTypeInformation
-    Write-Host "Group members scraped and exported to: $groupPath" -ForegroundColor Green
+    Write-Host "Group members (Users only) scraped and exported to: $groupPath" -ForegroundColor Green
 }
