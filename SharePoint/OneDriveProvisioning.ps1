@@ -8,27 +8,27 @@ $form.Text = "OneDrive Provisioning Tool"
 $form.Size = New-Object System.Drawing.Size(500, 360)
 $form.StartPosition = "CenterScreen"
 
-# Title label - tenant input
+# Tenant input label
 $tenantLabel = New-Object System.Windows.Forms.Label
 $tenantLabel.Text = "Enter tenant prefix (e.g. contoso):"
 $tenantLabel.Size = New-Object System.Drawing.Size(460, 20)
 $tenantLabel.Location = New-Object System.Drawing.Point(10, 20)
 $form.Controls.Add($tenantLabel)
 
-# Tenant textbox
+# Tenant input box
 $tenantBox = New-Object System.Windows.Forms.TextBox
 $tenantBox.Size = New-Object System.Drawing.Size(460, 20)
 $tenantBox.Location = New-Object System.Drawing.Point(10, 45)
 $form.Controls.Add($tenantBox)
 
-# Email label
+# Email input label
 $emailLabel = New-Object System.Windows.Forms.Label
 $emailLabel.Text = "Enter one or more user emails (comma-separated):"
 $emailLabel.Size = New-Object System.Drawing.Size(460, 20)
 $emailLabel.Location = New-Object System.Drawing.Point(10, 75)
 $form.Controls.Add($emailLabel)
 
-# Email input textbox
+# Email input box
 $emailBox = New-Object System.Windows.Forms.TextBox
 $emailBox.Multiline = $true
 $emailBox.Size = New-Object System.Drawing.Size(460, 80)
@@ -37,29 +37,42 @@ $form.Controls.Add($emailBox)
 
 # Status label
 $statusLabel = New-Object System.Windows.Forms.Label
-$statusLabel.Size = New-Object System.Drawing.Size(460, 40)
+$statusLabel.Size = New-Object System.Drawing.Size(460, 50)
 $statusLabel.Location = New-Object System.Drawing.Point(10, 245)
 $statusLabel.ForeColor = [System.Drawing.Color]::DarkGreen
 $form.Controls.Add($statusLabel)
 
-# Function to trigger OneDrive
+# Function: Install Module if Needed
+function Ensure-SPOInstalled {
+    if (-not (Get-Module -ListAvailable -Name Microsoft.Online.SharePoint.PowerShell)) {
+        $statusLabel.ForeColor = [System.Drawing.Color]::DarkOrange
+        $statusLabel.Text = "Installing SharePoint Online module..."
+        Install-Module -Name Microsoft.Online.SharePoint.PowerShell -Force -AllowClobber -Scope CurrentUser
+    }
+    Import-Module Microsoft.Online.SharePoint.PowerShell -ErrorAction Stop
+}
+
+# Function: Trigger OneDrive creation
 function Trigger-OneDrive {
     param ($tenantPrefix, $emails)
 
-    $statusLabel.ForeColor = [System.Drawing.Color]::DarkGreen
-    $statusLabel.Text = "Connecting to SharePoint Online..."
-
     try {
-        $tenantAdminUrl = "https://$tenantPrefix-admin.sharepoint.com"
-        Connect-SPOService -Url $tenantAdminUrl -ErrorAction Stop
+        Ensure-SPOInstalled
 
-        $statusLabel.Text = "Connected. Provisioning OneDrive..."
+        $statusLabel.ForeColor = [System.Drawing.Color]::DarkCyan
+        $statusLabel.Text = "Connecting to SharePoint Online..."
+
+        $tenantAdminUrl = "https://$tenantPrefix-admin.sharepoint.com"
+        Connect-SPOService
+
+        $statusLabel.Text = "Connected. Triggering OneDrive creation..."
         Request-SPOPersonalSite -UserEmails $emails -NoWait
 
-        $statusLabel.Text = "OneDrive provisioning triggered successfully."
+        $statusLabel.ForeColor = [System.Drawing.Color]::DarkGreen
+        $statusLabel.Text = "✅ OneDrive provisioning triggered successfully."
     } catch {
         $statusLabel.ForeColor = [System.Drawing.Color]::Red
-        $statusLabel.Text = "Error: $($_.Exception.Message)"
+        $statusLabel.Text = "❌ Error: $($_.Exception.Message)"
     }
 }
 
@@ -71,7 +84,7 @@ $provisionButton.Location = New-Object System.Drawing.Point(10, 200)
 $provisionButton.Add_Click({
     $tenant = $tenantBox.Text.Trim()
     $emails = $emailBox.Text.Trim()
-    
+
     if (-not $tenant) {
         $statusLabel.ForeColor = [System.Drawing.Color]::Red
         $statusLabel.Text = "Please enter a tenant prefix."
