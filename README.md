@@ -15,8 +15,10 @@ This repository is organized by function. Each script includes inline documentat
 | `AD Scripts`           | Manage Active Directory users, computers, groups, and stale object cleanup. |
 | `Complete Toolboxes`   | Fully interactive PowerShell UIs that combine multiple utilities in one menu-based script. |
 | `Entra`                | Scripts related to Microsoft Entra (Azure AD), including Conditional Access and audit tools. |
+| `Exchange`             | Scripts related to Microsoft Exchange, Mailbox confifguring and auditing. |
 | `Printer`              | Scripts for querying and managing printers and printer assignments across endpoints. |
-| `Sentinel`             | Scripts related to Microsoft Sentinel, log management, and security automation. |
+| `Sentinel`             | Scripts related to SentinelOne, log management, and security automation. |
+| `SharePoint`           | Scripts related to Microsoft SharePoint, OneDrive and Cloud storage. |
 | `Windows`              | Miscellaneous Windows-focused scripts for OS maintenance, version queries, device audits, and admin tools. |
 
 > Most scripts support CSV export to: `C:\Twistech\Script Results`
