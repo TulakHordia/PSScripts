@@ -1,28 +1,44 @@
-# Import Active Directory module (if not already imported)
+# Requires: ImportExcel module
+# Run as Domain Admin for best results
 Import-Module ActiveDirectory
+
+# Check and install ImportExcel if missing
+if (-not (Get-Module -ListAvailable -Name ImportExcel)) {
+    Install-Module -Name ImportExcel -Force -Scope CurrentUser
+}
+Import-Module ImportExcel
 
 $domainName = (Get-ADDomain).Name
 
-# Define the folder path and file path
+# Define folder and file paths
 $folderPath = "C:\Twistech\Script Results"
-$filePath = Join-Path -Path $folderPath -ChildPath "$domainName-Windows10Devices.csv"
+$filePath = Join-Path -Path $folderPath -ChildPath "$domainName-Windows10Devices.xlsx"
 
 # Create the folder if it doesn't exist
 if (-not (Test-Path -Path $folderPath)) {
     New-Item -Path $folderPath -ItemType Directory | Out-Null
 }
 
-# Search for enabled Windows 10 computers in AD
-$windows10Computers = Get-ADComputer -Filter {OperatingSystem -like "*Windows 10*" -and Enabled -eq $true} -Property Name,OperatingSystem,OperatingSystemVersion,Enabled
+# Query enabled Windows 10 machines
+$windows10Computers = Get-ADComputer -Filter {
+    OperatingSystem -like "*Windows 10*" -and Enabled -eq $true
+} -Property Name, OperatingSystem, OperatingSystemVersion, LastLogonDate
 
-# Display the results
-$windows10Computers | Select-Object Name, OperatingSystem, OperatingSystemVersion | Format-Table -AutoSize
+# Prepare results array
+$results = foreach ($pc in $windows10Computers) {
+    [PSCustomObject]@{
+        Name                   = $pc.Name
+        OperatingSystem        = $pc.OperatingSystem
+        OSVersion              = $pc.OperatingSystemVersion
+        LastLogonTimestamp     = $pc.LastLogonDate
+        # Placeholder - Requires further setup to get real last logged-on user
+        LastLoggedOnUser       = "Unknown"  
+    }
+}
 
-# Export the results to CSV
-$windows10Computers | Select-Object Name, OperatingSystem, OperatingSystemVersion | Export-Csv -Path $filePath -NoTypeInformation
+# Export to XLSX
+$results | Export-Excel -Path $filePath -WorksheetName "Windows10Devices" -AutoSize -TableName "Windows10PCs"
 
-# Inform the user of the export location
-Write-Host "Report exported to: $folderPath"
-
-# Pause the script to prevent the window from closing
+# Inform the user
+Write-Host "Report exported to: $filePath" -ForegroundColor Green
 Read-Host "Press any key to close the window..."
