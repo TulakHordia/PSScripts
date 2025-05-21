@@ -70,11 +70,7 @@ Get-ChildItem -Path $RootFolder -Directory -Recurse -ErrorAction SilentlyContinu
 }
 
 # === Export to Excel ===
-<<<<<<< HEAD
-$outputPath = "$savePath\$domainName_Folder_Permissions_$(Get-Date -Format 'yyyyMMdd_HHmm').xlsx"
-=======
 $outputPath = "$savePath\Folder_Permissions_$(Get-Date -Format 'yyyyMMdd_HHmm').xlsx"
->>>>>>> 2db0a8145c8ca2c4d7f8ae8d0ea5e3fdfc6e62e8
 $results | Export-Excel -Path $outputPath -AutoSize -Title "Folder Permissions" -FreezeTopRow -BoldTopRow
 
 Write-Host "`n✅ Export complete: $outputPath" -ForegroundColor Green
