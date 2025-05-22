@@ -8,10 +8,6 @@ Import-Module ImportExcel
 $RootFolder = Read-Host "Enter the full path to the root folder"
 $MaxDepth = 3  # Set the recursion depth here
 $savePath = "C:\Twistech\Script Results"
-<<<<<<< HEAD
-$domainName = (Get-ADDomain).Name
-=======
->>>>>>> 2db0a8145c8ca2c4d7f8ae8d0ea5e3fdfc6e62e8
 
 # === Create Output Directory If Needed ===
 if (-not (Test-Path -Path $savePath)) {
