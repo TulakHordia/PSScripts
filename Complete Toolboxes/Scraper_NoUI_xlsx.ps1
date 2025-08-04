@@ -38,12 +38,22 @@ function New-ScriptResultsFolder {
 }
 
 function GetPCs {
+    param(
+        [int]$thresholdDays = 90  # Default threshold if not passed
+    )
+
     $global:resultsPCs = @()
     $dateThreshold = (Get-Date).AddDays(-$thresholdDays)
-    $computers = Get-ADComputer -Filter {Enabled -eq $true} -Property LastLogonDate
+
+    $computers = Get-ADComputer -Filter {Enabled -eq $true} -Property Name, LastLogonDate, OperatingSystem
     foreach ($computer in $computers) {
         if ($computer.LastLogonDate -and $computer.LastLogonDate -lt $dateThreshold) {
-            $global:resultsPCs += $computer
+            $global:resultsPCs += [PSCustomObject]@{
+                Hostname       = $computer.Name
+                LastLogonDate  = $computer.LastLogonDate
+                OSVersion      = $computer.OperatingSystem
+                DistinguishedName = $computer.DistinguishedName
+            }
         }
     }
 
@@ -56,6 +66,7 @@ function GetPCs {
         Write-Host "No inactive PCs found." -ForegroundColor Yellow
     }
 }
+
 
 function Add-Description-To-PCs {
     if (!$resultsPCs) {
