@@ -2,7 +2,7 @@
 Import-Module ActiveDirectory
 
 # Define export path
-$exportPath = "C:\Twistech\Script Results\DisabledUsers.csv"
+$exportPath = "C:\Informat\Script Results\DisabledUsers.csv"
 
 # Create export folder if it doesn't exist
 $folder = Split-Path -Path $exportPath
