@@ -1,1 +1,0 @@
-Get-Printer | Where-Object { $_.Name -like "*\\DC01\*" } | ForEach-Object { Remove-Printer -Name $_.Name }
